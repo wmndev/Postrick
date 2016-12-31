@@ -11,7 +11,7 @@ router.get('/', function (req, res, next) {
 /*GET userlist page*/
 router.get('/userlist', function (req, res) {
     var db = req.db;
-    var collection = db.get('usercollection');
+    var collection = db.get('users');
     collection.find({}, {}, function (e, docs) {
         res.render('userlist', {
             'userlist': docs
@@ -31,9 +31,9 @@ router.post('/adduser', function (req, res) {
     var db = req.db;
 
     var userName = req.body.username;
-    var userEmail = req.body.useremail;
+    var userEmail = req.body.password;
 
-    var collection = db.get('usercollection');
+    var collection = db.get('users');
 
     collection.insert({
             "username": userName,

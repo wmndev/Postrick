@@ -4,11 +4,15 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var passport = require('passport');
+var expressSession = require('express-session');
+
+var dbConfig = require('./config/db.js');
 
 
 var mongo = require('mongodb');
 var monk = require('monk');
-var db = monk('localhost:27017/postrick');
+var db = monk(dbConfig.url);
 
 var index = require('./routes/index');
 var users = require('./routes/users');
@@ -28,6 +32,12 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+
+//passport configuration
+app.use(expressSession({secret : 'mySecretKey'}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(function (req, res, next) {
     req.db = db;
