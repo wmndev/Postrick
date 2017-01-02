@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var passport = require('passport');
 var expressSession = require('express-session');
+var bCrypt = require('./utils/bcryptUtil.js');
 
 var dbConfig = require('./config/db.js');
 
@@ -14,8 +15,7 @@ var mongo = require('mongodb');
 var monk = require('monk');
 var db = monk(dbConfig.url);
 
-var index = require('./routes/index');
-var users = require('./routes/users');
+
 
 var app = express();
 
@@ -35,9 +35,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 //passport configuration
-app.use(expressSession({secret : 'mySecretKey'}));
+app.use(expressSession({
+    secret: 'mySecretKey',
+    resave: true,
+    saveUninitialized: true
+}));
 app.use(passport.initialize());
 app.use(passport.session());
+
+var initPassport = require('./passport/init');
+initPassport(passport);
+
+
+var index = require('./routes/index')(passport);
+var users = require('./routes/users');
 
 app.use(function (req, res, next) {
     req.db = db;

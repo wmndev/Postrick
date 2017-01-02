@@ -1,5 +1,5 @@
-var localStrategy = require('passport-local').Strategy;
-var bCrypt = require('bcrypt-nodejs');
+var LocalStrategy = require('passport-local').Strategy;
+var bCrypt = require('../utils/bcryptUtil.js');
 
 module.exports = function (passport) {
 
@@ -7,6 +7,7 @@ module.exports = function (passport) {
             passReqToCallback: true
         },
         function (req, username, password, done) {
+        console.log('trying to logib');
             var db = req.db;
             var users = db.get('users');
 
@@ -18,7 +19,7 @@ module.exports = function (passport) {
                     return done(null, false);
                 }
 
-                if (!isValidPassword(doc, password)) {
+                if (!bCrypt.comparePasswords(doc.password, password)) {
                     console.log('Invalid password: ' + username);
                     return done(null, false);
                 }
@@ -27,8 +28,4 @@ module.exports = function (passport) {
             });
         }
     ));
-
-    var isValidPassword = function (user, password) {
-        return bCrypt.compareSync(password, user.password);
-    }
 }
