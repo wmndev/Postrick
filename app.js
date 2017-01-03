@@ -10,12 +10,9 @@ var bCrypt = require('./utils/bcryptUtil.js');
 
 var dbConfig = require('./config/db.js');
 
-
 var mongo = require('mongodb');
 var monk = require('monk');
 var db = monk(dbConfig.url);
-
-
 
 var app = express();
 

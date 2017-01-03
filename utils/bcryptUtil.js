@@ -2,13 +2,11 @@ var bCrypt = require('bcrypt-nodejs');
 
 module.exports = {
 
-    comparePasswords: function (password, compareTo) {
-
-        return bCrypt.compareSync(password, compareTo);
+    comparePasswords: function (password, hash) {
+        return bCrypt.compareSync(password, hash);
     },
 
     createHash: function (password) {
-        return bCrypt.hashSync(password, bCrypt.gwnSaltSync(10), null);
-
+        return bCrypt.hashSync(password);
     }
 }

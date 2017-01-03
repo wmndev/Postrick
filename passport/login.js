@@ -7,10 +7,9 @@ module.exports = function (passport) {
             passReqToCallback: true
         },
         function (req, username, password, done) {
-        console.log('trying to logib');
             var db = req.db;
-            var users = db.get('users');
 
+            var users = db.get('users');
             users.findOne({
                 username: username
             }).then(function (doc) {
@@ -18,13 +17,13 @@ module.exports = function (passport) {
                     console.log('User not found: ' + username);
                     return done(null, false);
                 }
-
                 if (!bCrypt.comparePasswords(doc.password, password)) {
                     console.log('Invalid password: ' + username);
                     return done(null, false);
                 }
+                console.log('sucessfully authenticated user:' + username);
 
-                return done(null, user);
+                return done(null, doc);
             });
         }
     ));

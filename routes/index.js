@@ -42,18 +42,27 @@ module.exports = function (passport) {
         failureFlash: true
     }));
 
+    router.get('/signup', function(req, res){
+        res.render('register', {title: "Sign Up"})
+    })
+
+    router.post('/signup', passport.authenticate('signup', {
+        successRedirect: '/userlist',
+        failureRedirect: '/signup'
+    }));
+
     /*POST add user*/
     router.post('/adduser', function (req, res) {
         var db = req.db;
 
         var userName = req.body.username;
-        var userEmail = req.body.password;
+        var password = req.body.password;
 
-        var collection = db.get('users');
+        var users = db.get('users');
 
-        collection.insert({
+        users.insert({
                 "username": userName,
-                "email": userEmail
+                "password": password
             },
             function (err, doc) {
                 if (err) {
