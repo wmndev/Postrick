@@ -17,7 +17,11 @@ module.exports = function (passport) {
                     console.log('User not found: ' + username);
                     return done(null, false);
                 }
-                if (!bCrypt.comparePasswords(doc.password, password)) {
+                var isMatched = bCrypt.comparePasswords(password, doc.password);
+                console.log('isMatched :' + isMatched);
+                console.log('!isMatched :' + !isMatched);
+
+                if (!isMatched) {
                     console.log('Invalid password: ' + username);
                     return done(null, false);
                 }

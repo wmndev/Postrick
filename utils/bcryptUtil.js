@@ -7,6 +7,9 @@ module.exports = {
     },
 
     createHash: function (password) {
-        return bCrypt.hashSync(password);
+        // Generate a salt
+        var salt = bCrypt.genSaltSync(10);
+        return bCrypt.hashSync(password, salt);
+
     }
 }
