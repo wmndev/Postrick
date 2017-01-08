@@ -1,35 +1,37 @@
 var LocalStrategy = require('passport-local').Strategy;
-var bCrypt = require('../utils/bcryptUtil.js');
-
+var User = require('../model/user');
 
 module.exports = function (passport) {
 
     passport.use('signup', new LocalStrategy({
+            usernameField: 'email',
+            passwordField: 'password',
             passReqToCallback: true
         },
-        function (req, username, password, done) {
+        function (req, email, password, done) {
             findOrCreateUser = function () {
 
-                var db = req.db;
-                console.log('in signup db->' + db);
-                var users = db.get('users');
-                users.findOne({
-                    username: username
-                }).then(function (doc) {
-                    if (doc) {
-                        console.log('user already exists:' + username);
+                User.findOne({'local.email' : email}, function(err, existingUser){
+                    if (err)
+                        return done(err);
+
+                    if (existingUser){
+                        console.log('User -' + email + '- already exists');
                         return done(null, false);
-                    } else {
-                        console.log('about to create user');
-                        users.insert({
-                            username: username,
-                            password: bCrypt.createHash(password)
-                        }).then(function (user) {
-                            console.log('welcome ' + user.username);
-                            return done(null, user)
-                        });
                     }
 
+                    var newUser = new User();
+                    newUser.local.email = email;
+                    newUser.local.password = newUser.generateHash(password);
+
+                    newUser.save(function(err){
+                        if (err){
+                            throw err;
+                        }
+
+                        console.log('Welcome ' + email + '!');
+                        return done(null, newUser);
+                    });
                 });
             };
             process.nextTick(findOrCreateUser);

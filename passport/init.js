@@ -1,27 +1,25 @@
 var login = require('./login');
 var signup = require('./signup');
-var dbConfig = require('../config/db.js');
-var monk = require('monk');
-var db = monk(dbConfig.url);
+var facebook = require('./facebook');
+var User = require('../model/user');
+
 
 
 module.exports = function (passport) {
 
     passport.serializeUser(function (user, done) {
-        console.log('serializing user: ' + user.username);
-        done(null, user._id);
+        console.log('serializing user: ' /*+ user.local.email*/);
+        done(null, user.id);
     });
 
     passport.deserializeUser(function (id, done) {
-        var users = db.get('users');
-        users.findOne({
-            _id: id
-        }).then(function (doc) {
-            console.log('deserializing user :' + doc.username);
-            done(null, doc);
+        User.findById(id, function(err, user){
+            console.log('deserializing user :' /*+ user.local.email*/);
+            done(err, user);
         });
     });
 
     login(passport);
     signup(passport);
+    facebook(passport);
 }

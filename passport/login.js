@@ -1,34 +1,32 @@
 var LocalStrategy = require('passport-local').Strategy;
-var bCrypt = require('../utils/bcryptUtil.js');
+var User = require('../model/user');
 
 module.exports = function (passport) {
 
     passport.use('login', new LocalStrategy({
+            usernameField: 'email',
+            passwordField: 'password',
             passReqToCallback: true
         },
-        function (req, username, password, done) {
-            var db = req.db;
+        function (req, email, password, done) {
+            process.nextTick(function () {
+                User.findOne({
+                    'local.email': email
+                }, function (err, user) {
+                    if (err)
+                        return done(err);
 
-            var users = db.get('users');
-            users.findOne({
-                username: username
-            }).then(function (doc) {
-                if (!doc) {
-                    console.log('User not found: ' + username);
-                    return done(null, false);
-                }
-                var isMatched = bCrypt.comparePasswords(password, doc.password);
-                console.log('isMatched :' + isMatched);
-                console.log('!isMatched :' + !isMatched);
+                    if (!user)
+                        return done(null, false);
 
-                if (!isMatched) {
-                    console.log('Invalid password: ' + username);
-                    return done(null, false);
-                }
-                console.log('sucessfully authenticated user:' + username);
-
-                return done(null, doc);
+                    if (!user.validPassword(password))
+                        return done(null, false);
+                    else
+                        return done(null, user);
+                    a
+                });
             });
+
         }
     ));
 }

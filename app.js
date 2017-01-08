@@ -6,13 +6,21 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var passport = require('passport');
 var expressSession = require('express-session');
-var bCrypt = require('./utils/bcryptUtil.js');
 
 var dbConfig = require('./config/db.js');
 
 var mongo = require('mongodb');
-var monk = require('monk');
-var db = monk(dbConfig.url);
+
+//=============
+// Mongoose
+//=============
+var mongoose = require('mongoose');
+mongoose.connect(dbConfig.url);
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  console.log('Mongo DB is connected..')
+});
 
 var app = express();
 
@@ -48,7 +56,6 @@ var index = require('./routes/index')(passport);
 var users = require('./routes/users');
 
 app.use(function (req, res, next) {
-    req.db = db;
     next();
 });
 

@@ -11,10 +11,46 @@ var isAuthenticated = function (req, res, next) {
 
 module.exports = function (passport) {
 
-    /* GET home page. */
+    //============
+    // Index
+    //============
     router.get('/', function (req, res, next) {
         res.render('index', {
             title: 'Express'
+        });
+    });
+
+
+    //============
+    // Login
+    //============
+    router.post('/login', passport.authenticate('login', {
+        successRedirect: '/dashboard',
+        failureRedirect: '/',
+        failureFlash: true
+    }));
+
+    //============
+    // Register
+    //============
+    router.get('/signup', function (req, res) {
+        res.render('register', {
+            title: "Sign Up"
+        })
+    })
+
+    router.post('/signup', passport.authenticate('signup', {
+        successRedirect: '/dashboard',
+        failureRedirect: '/signup'
+    }));
+
+    //==========
+    // Dashboad
+    //==========
+
+    router.get('/dashboard', isAuthenticated, function (req, res) {
+        res.render('dashboard', {
+            title: "Profile"
         });
     });
 
@@ -29,49 +65,47 @@ module.exports = function (passport) {
         });
     });
 
-    /*GET New User page*/
-    router.get('/newuser', function (req, res) {
-        res.render('newuser', {
-            title: "Add New User"
-        })
-    });
 
-    router.post('/login', passport.authenticate('login', {
-        successRedirect: '/userlist',
-        failureRedirect: '/',
-        failureFlash: true
+    //================
+    // FACEBOOK ======
+    //================
+
+    //facebook auth and login
+    router.get('/connect/facebook', passport.authorize('facebook', {
+        scope: 'email'
+    }))
+
+    //handle the callback
+    router.get('/connect/facebook/callback', passport.authorize('facebook', {
+        successRedirect: '/dashboard',
+        failureRedirect: '/'
     }));
 
-    router.get('/signup', function(req, res){
-        res.render('register', {title: "Sign Up"})
+    //handle authenticate callback
+    router.get('/auth/facebook/callback', passport.authenticate('facebook', {
+        successRedirect: '/dashboard',
+        failureRedirect: '/'
+    }));
+
+
+
+    //unlink
+    router.get('/unlink/facebook', function (req, res) {
+       var user = req.user;
+        user.facebook.token = undefined;
+        user.save(function(err){
+           res.redirect('/dashboard');
+        });
+    });
+
+
+    //========
+    // Logout
+    //========
+    router.get('/logout', function (req, res) {
+        req.logout();
+        res.redirect('/');
     })
-
-    router.post('/signup', passport.authenticate('signup', {
-        successRedirect: '/userlist',
-        failureRedirect: '/signup'
-    }));
-
-    /*POST add user*/
-    router.post('/adduser', function (req, res) {
-        var db = req.db;
-
-        var userName = req.body.username;
-        var password = req.body.password;
-
-        var users = db.get('users');
-
-        users.insert({
-                "username": userName,
-                "password": password
-            },
-            function (err, doc) {
-                if (err) {
-                    res.send('There was an error');
-                } else {
-                    res.redirect('userlist');
-                }
-            });
-    });
 
     return router;
 }
