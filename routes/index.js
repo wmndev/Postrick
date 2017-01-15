@@ -72,7 +72,7 @@ module.exports = function (passport) {
 
     //facebook auth and login
     router.get('/connect/facebook', passport.authorize('facebook', {
-        scope: 'email'
+        scope: ['email', 'user_friends']
     }))
 
     //handle the callback
@@ -104,6 +104,7 @@ module.exports = function (passport) {
     //========
     router.get('/logout', function (req, res) {
         req.logout();
+        req.session.destroy();
         res.redirect('/');
     })
 

@@ -6,10 +6,9 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var passport = require('passport');
 var expressSession = require('express-session');
-
+var _ = require('underscore');
 var dbConfig = require('./config/db.js');
-
-var mongo = require('mongodb');
+var graph = require('fbgraph');
 
 //=============
 // Mongoose
@@ -18,8 +17,8 @@ var mongoose = require('mongoose');
 mongoose.connect(dbConfig.url);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() {
-  console.log('Mongo DB is connected..')
+db.once('open', function () {
+    console.log('Mongo DB is connected..')
 });
 
 var app = express();
@@ -51,11 +50,42 @@ app.use(passport.session());
 var initPassport = require('./passport/init');
 initPassport(passport);
 
-
+//==========
+// Routes
+//==========
 var index = require('./routes/index')(passport);
 var users = require('./routes/users');
 
+var configAuth = require('./config/auth');
 app.use(function (req, res, next) {
+    if (!_.isUndefined(req.user) && _.isUndefined(req.session.facebook.graph)) {
+        if (!_.isUndefined(req.user.facebook.token)) {
+            var options = {
+                timeout: 3000,
+                pool: {
+                    maxSockets: Infinity
+                },
+                headers: {
+                    connection: "keep-alive"
+                }
+            };
+            req.session.facebook.graph = graph.setAccessToken(req.user.facebook.token)
+                .setAppSecret(configAuth.facebookAuth.clientSecret)
+                .setVersion(configAuth.facebookAuth.apiVersion)
+                .setOptions(options)
+        }
+
+        //         graph
+        //            .get('me?fields=friends{name,link}', function (err, res) {
+        //            console.log(err);
+        //                console.log(res); 
+        //            res.friends.data.forEach(function(e){
+        //                console.log(e);
+        //            })
+        //            });
+
+        //console.log(graphObject);
+    }
     next();
 });
 
@@ -63,8 +93,10 @@ app.use('/', index);
 app.use('/users', users);
 
 
-// prepare server
+//================
+// Static paths
 //app.use('/', express.static(__dirname + '/www')); // redirect root
+//================
 app.use('/js', express.static(__dirname + '/node_modules/bootstrap/dist/js')); // redirect bootstrap JS
 app.use('/js', express.static(__dirname + '/node_modules/jquery/dist')); // redirect JS jQuery
 app.use('/css', express.static(__dirname + '/node_modules/bootstrap/dist/css')); // redirect CSS bootstrap
@@ -76,7 +108,9 @@ app.use(function (req, res, next) {
     next(err);
 });
 
-// error handler
+//===============
+// Error handler
+//===============
 app.use(function (err, req, res, next) {
     // set locals, only providing error in development
     res.locals.message = err.message;
